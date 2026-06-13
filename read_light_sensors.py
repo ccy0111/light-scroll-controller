@@ -22,12 +22,8 @@ import argparse
 import signal
 import sys
 import time
+import spidev
 from dataclasses import dataclass
-
-try:
-    import spidev
-except ImportError:
-    spidev = None
 
 
 @dataclass(frozen=True)
