@@ -170,3 +170,24 @@ python3 read_light_sensors.py
 
 If everything is wired correctly, covering a sensor should change the matching
 `CH0` to `CH7` value in real time.
+
+Run the keyboard-like event stream converter:
+
+```bash
+python3 keyboard_input_stream.py
+```
+
+Keep the sensors uncovered during the initial calibration window. The converter
+writes one event per line to stdout:
+
+```text
+1
+4
+RIGHT
+DOWN
+```
+
+This is a user-space input converter, not a Linux kernel input driver yet.
+stdout keeps the first driver simple and composable: another program can consume
+the events through a pipe, and the same gesture logic can later be connected to
+`uinput` or another real input-device interface.
