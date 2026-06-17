@@ -103,8 +103,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--min-delta",
         type=positive_float,
-        default=80.0,
-        help="Minimum ADC drop needed to mark a sensor pressed. Default: 80",
+        default=50.0,
+        help="Minimum ADC drop needed to mark a sensor pressed. Default: 50",
     )
     parser.add_argument(
         "--noise-multiplier",
