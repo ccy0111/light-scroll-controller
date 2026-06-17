@@ -162,6 +162,12 @@ sudo apt update
 sudo apt install -y python3-spidev
 ```
 
+Install the virtual keyboard dependency:
+
+```bash
+sudo apt install -y python3-evdev
+```
+
 Run the live sensor reader:
 
 ```bash
@@ -198,3 +204,13 @@ This is a user-space input converter, not a Linux kernel input driver yet.
 stdout keeps the first driver simple and composable: another program can consume
 the events through a pipe, and the same gesture logic can later be connected to
 `uinput` or another real input-device interface.
+
+Run the virtual keyboard driver:
+
+```bash
+sudo python3 uinput_keyboard.py
+```
+
+The virtual keyboard sends touch gestures as numpad keys `1` to `8`, and swipe
+gestures as the normal arrow keys. `sudo` may be required because Linux usually
+restricts access to `/dev/uinput`.
