@@ -187,6 +187,13 @@ RIGHT
 DOWN
 ```
 
+If vertical swipes are split into two taps because the sensor spacing is wide,
+adjust the inactive gesture window:
+
+```bash
+python3 keyboard_input_stream.py --frame-window 0.3
+```
+
 This is a user-space input converter, not a Linux kernel input driver yet.
 stdout keeps the first driver simple and composable: another program can consume
 the events through a pipe, and the same gesture logic can later be connected to

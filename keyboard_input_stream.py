@@ -253,8 +253,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--frame-window",
         type=positive_float,
-        default=0.1,
-        help="Seconds to wait before closing an inactive gesture frame. Default: 0.1",
+        default=0.3,
+        help="Seconds to wait before closing an inactive gesture frame. Default: 0.3",
     )
     parser.add_argument(
         "--calibration-seconds",
