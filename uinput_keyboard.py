@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Expose light-sensor gestures as a virtual Linux keyboard through uinput.
+센서 제스처를 실제 키보드 입력처럼 보내는 코드.
 
-Gesture mapping:
+매핑:
     1..8        -> numpad 1..8
     LEFT/RIGHT  -> keyboard arrow keys
     UP/DOWN     -> keyboard arrow keys
@@ -25,7 +25,7 @@ from keyboard_input_stream import (
 
 try:
     from evdev import UInput, ecodes
-except ImportError:  # pragma: no cover - only expected before Pi setup.
+except ImportError:  # evdev 설치 전이면 여기로 온다.
     UInput = None
     ecodes = None
 

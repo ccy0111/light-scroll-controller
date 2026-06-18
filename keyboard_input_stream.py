@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Convert 8 GL5537 light sensor readings into a simple keyboard-like event stream.
+조도 센서 입력을 숫자/방향 이벤트로 바꾸는 코드.
 
-Output is one event per line:
+출력은 한 줄에 하나씩 나온다.
     1
     2
     LEFT
@@ -10,9 +10,7 @@ Output is one event per line:
     UP
     DOWN
 
-This is a user-space converter. It writes to stdout so another process can read
-the events through a pipe before this project moves to a real Linux input device
-interface such as uinput.
+uinput 연결 전에도 디버깅할 수 있게 stdout으로 흘린다.
 """
 
 from __future__ import annotations
@@ -27,7 +25,7 @@ from enum import Enum
 
 try:
     import spidev
-except ImportError:  # pragma: no cover - only expected off Raspberry Pi.
+except ImportError:  # 라즈베리파이가 아니면 없을 수 있다.
     spidev = None
 
 

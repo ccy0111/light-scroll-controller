@@ -1,18 +1,16 @@
 #!/usr/bin/env python3
 """
-Read 8 GL5537 light sensors through an MCP3008 ADC and print live values.
+MCP3008로 조도 센서 8개 값을 실시간 확인하는 디버그용 코드.
 
-Hardware assumptions:
-- Raspberry Pi SPI is enabled.
-- MCP3008 VDD/VREF are wired to 3.3V.
-- MCP3008 AGND/DGND are wired to GND.
-- MCP3008 CLK/MISO/MOSI/CE0 are wired to Raspberry Pi SPI0.
-- Sensors are connected to MCP3008 channels CH0..CH7.
+메모:
+- Raspberry Pi SPI를 켜야 함
+- MCP3008은 3.3V 기준으로 사용
+- 센서는 CH0..CH7에 연결
 
-Install dependency on the Raspberry Pi:
+설치:
     python3 -m pip install spidev
 
-Run:
+실행:
     python3 read_light_sensors.py
 """
 
@@ -53,10 +51,7 @@ class MCP3008:
         if not 0 <= channel <= 7:
             raise ValueError(f"MCP3008 channel must be 0..7, got {channel}")
 
-        # MCP3008 SPI transaction:
-        # byte 0: start bit
-        # byte 1: single-ended mode bit + channel selection
-        # byte 2: remaining clock cycles for 10-bit result
+        # MCP3008에서 10비트 ADC 값을 읽는다.
         response = self.spi.xfer2([1, (8 + channel) << 4, 0])
         return ((response[1] & 0x03) << 8) | response[2]
 

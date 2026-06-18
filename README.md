@@ -1,99 +1,61 @@
 # Light Scroll Controller
 
-Raspberry Pi 4, MCP3008 ADC, and GL5537 CdS light sensor based non-contact
-controller.
+## 프로젝트 소개
 
-The first step is to read an 8-channel light sensor array in real time. Later
-steps can use the measured light offset pattern to detect swipe, tap, and hold
-gestures.
+Light Scroll Controller는 GL5537 CdS 조도 센서 8개를 2x4 배열로 배치해
+손가락 그림자의 이동을 입력으로 해석하는 Raspberry Pi 기반 입력 장치이다.
 
-## Hardware
+센서 위에는 투명 필름을 얹어 사용자가 터치패드처럼 조작할 수 있게 한다.
+사용자가 필름 위를 터치하거나 쓸어 넘기면 각 센서에 들어오는 빛의 양이
+달라지고, 프로그램은 이 조도 변화량과 변화 순서를 분석해 터치 및 스와이프
+제스처를 판정한다.
+
+현재 구현은 두 가지 입력 모드를 제공한다.
+
+- 터치: 센서 1~8을 숫자패드 1~8 입력으로 변환
+- 스와이프: 좌/우/상/하 움직임을 방향키 입력으로 변환
+
+이 프로젝트의 목적은 고가의 터치패널이나 카메라 없이, 저렴한 조도 센서와
+ADC만으로 범용적인 제스처 입력 장치를 구현하는 것이다.
+
+## 회로 연결
+
+사용 부품:
 
 - Raspberry Pi 4
 - MCP3008 ADC
-- GL5537 CdS light sensors x 8
-- 10k ohm resistors x 8, for voltage dividers
-- Breadboard and jumper wires
+- GL5537 CdS 조도 센서 8개
+- 10k ohm 저항 8개
+- 브레드보드 및 점퍼선
 
-## Pin Layout
-
-Use Raspberry Pi physical pin numbers when wiring. GPIO numbers are included
-for reference.
-
-### Breadboard Power Rails
-
-Use breadboard power rails to distribute shared power and ground.
-
-Recommended rail layout:
+전원 레일:
 
 ```text
-Breadboard left + rail   -> 3.3V rail for MCP3008 and light sensors
-Breadboard left - rail   -> GND rail
+Raspberry Pi 3.3V  -> 브레드보드 3.3V 레일
+Raspberry Pi GND   -> 브레드보드 GND 레일
 
-Breadboard right + rail  -> 5V rail, currently unused and reserved for expansion
-Breadboard right - rail  -> GND rail
+브레드보드 3.3V   -> MCP3008 VDD, VREF, GL5537 센서 입력
+브레드보드 GND    -> MCP3008 AGND, DGND, 센서 분압 저항
 ```
 
-Connect both breadboard GND rails together. All modules must share the same
-ground. The current MCP3008/light sensor circuit does not require 5V, but
-keeping a separate 5V rail is useful for later modules. Keep it isolated from
-the 3.3V rail.
+MCP3008은 반드시 3.3V로 동작시킨다. Raspberry Pi GPIO는 5V 입력을 허용하지
+않으므로 MCP3008이나 GPIO 쪽에 5V를 연결하지 않는다.
+
+MCP3008과 Raspberry Pi 연결:
 
 ```text
-Raspberry Pi physical pin 1 or 17 -> breadboard 3.3V rail
-Raspberry Pi physical pin 2 or 4  -> breadboard 5V rail, optional for expansion
-Raspberry Pi physical pin 25      -> breadboard GND rail
+MCP3008 VDD  pin 16 -> 3.3V
+MCP3008 VREF pin 15 -> 3.3V
+MCP3008 AGND pin 14 -> GND
+MCP3008 DGND pin 9  -> GND
 
-breadboard 3.3V rail -> MCP3008 VDD, MCP3008 VREF, GL5537 sensor inputs
-breadboard 5V rail   -> currently unused
-breadboard GND rail  -> MCP3008 AGND/DGND, sensor resistors
+MCP3008 CLK  pin 13 -> GPIO11 / SCLK / physical pin 23
+MCP3008 DOUT pin 12 -> GPIO9  / MISO / physical pin 21
+MCP3008 DIN  pin 11 -> GPIO10 / MOSI / physical pin 19
+MCP3008 CS   pin 10 -> GPIO8  / CE0  / physical pin 24
 ```
 
-Keep the 3.3V rail and 5V rail separate. Do not connect 5V to the MCP3008 or
-to Raspberry Pi GPIO pins.
-
-### Power and Ground
-
-```text
-Raspberry Pi 4        Target
---------------        ------
-3.3V pin 1 or 17  ->  breadboard 3.3V rail
-5V pin 2 or 4     ->  breadboard 5V rail, optional for expansion
-GND pin 25        ->  breadboard GND rail
-
-breadboard 3.3V   ->  MCP3008 VDD pin 16
-breadboard 3.3V   ->  MCP3008 VREF pin 15
-breadboard 3.3V   ->  GL5537 sensor voltage dividers
-
-breadboard 5V     ->  currently unused
-
-breadboard GND    ->  MCP3008 AGND pin 14
-breadboard GND    ->  MCP3008 DGND pin 9
-breadboard GND    ->  GL5537 sensor divider resistors
-```
-
-Keep the MCP3008 on 3.3V. Do not power the MCP3008 from 5V because Raspberry Pi
-GPIO pins are not 5V tolerant.
-
-### MCP3008 to Raspberry Pi 4
-
-```text
-MCP3008          Raspberry Pi 4
--------          --------------
-VDD  pin 16  ->  3.3V   breadboard 3.3V rail
-VREF pin 15  ->  3.3V   breadboard 3.3V rail
-AGND pin 14  ->  GND    breadboard GND rail
-DGND pin 9   ->  GND    breadboard GND rail
-
-CLK  pin 13  ->  GPIO11 / SCLK  physical pin 23
-DOUT pin 12  ->  GPIO9  / MISO  physical pin 21
-DIN  pin 11  ->  GPIO10 / MOSI  physical pin 19
-CS   pin 10  ->  GPIO8  / CE0   physical pin 24
-```
-
-### Light Sensors to MCP3008
-
-Connect each GL5537 sensor as a voltage divider.
+조도 센서 분압 회로:
 
 ```text
 3.3V
@@ -102,13 +64,15 @@ Connect each GL5537 sensor as a voltage divider.
  |
  +----> MCP3008 CHx
  |
-[10k ohm resistor]
+[10k ohm 저항]
  |
 GND
 ```
 
-With this layout, brighter light gives a higher ADC value and shadow gives a
-lower ADC value.
+이 배선에서는 밝을수록 ADC 값이 커지고, 손가락 그림자가 생기면 ADC 값이
+작아진다.
+
+센서 채널 배치:
 
 ```text
 Sensor 1 -> MCP3008 CH0 pin 1
@@ -121,96 +85,9 @@ Sensor 7 -> MCP3008 CH6 pin 7
 Sensor 8 -> MCP3008 CH7 pin 8
 ```
 
-Recommended 2x4 physical layout:
+권장 2x4 센서 배열:
 
 ```text
 CH0  CH1  CH2  CH3
 CH4  CH5  CH6  CH7
 ```
-
-## GPIO Summary
-
-```text
-MCP3008 SPI0:
-GPIO8, GPIO9, GPIO10, GPIO11
-```
-
-Only the SPI0 pins are required for the current MCP3008/light sensor circuit.
-
-## Raspberry Pi Setup
-
-Enable SPI:
-
-```bash
-sudo raspi-config
-```
-
-```text
-Interface Options -> SPI -> Enable
-```
-
-Reboot after enabling SPI:
-
-```bash
-sudo reboot
-```
-
-Install the Python SPI dependency:
-
-```bash
-sudo apt update
-sudo apt install -y python3-spidev
-```
-
-Install the virtual keyboard dependency:
-
-```bash
-sudo apt install -y python3-evdev
-```
-
-Run the live sensor reader:
-
-```bash
-python3 read_light_sensors.py
-```
-
-If everything is wired correctly, covering a sensor should change the matching
-`CH0` to `CH7` value in real time.
-
-Run the keyboard-like event stream converter:
-
-```bash
-python3 keyboard_input_stream.py
-```
-
-Keep the sensors uncovered during the initial calibration window. The converter
-writes one event per line to stdout:
-
-```text
-1
-4
-RIGHT
-DOWN
-```
-
-If vertical swipes are split into two taps because the sensor spacing is wide,
-adjust the inactive gesture window:
-
-```bash
-python3 keyboard_input_stream.py --frame-window 0.3
-```
-
-This is a user-space input converter, not a Linux kernel input driver yet.
-stdout keeps the first driver simple and composable: another program can consume
-the events through a pipe, and the same gesture logic can later be connected to
-`uinput` or another real input-device interface.
-
-Run the virtual keyboard driver:
-
-```bash
-sudo python3 uinput_keyboard.py
-```
-
-The virtual keyboard sends touch gestures as numpad keys `1` to `8`, and swipe
-gestures as the normal arrow keys. `sudo` may be required because Linux usually
-restricts access to `/dev/uinput`.
